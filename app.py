@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from service.planets import getAllPlanets, searchPlanet
 from service.stars import central_reference
-from service.simplestars import startsData
+from service.simplestars import starsData
 
 app = FastAPI()
 
@@ -19,4 +19,4 @@ async def getAllStars(planetName: str):
 
 @app.get("/starsv2/{planetName}")
 async def getStars(planetName: str):
-  return startsData(planetName);
+  return starsData(planetName);

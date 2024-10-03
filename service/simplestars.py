@@ -3,7 +3,7 @@ from astropy.coordinates import SkyCoord
 from astroquery.gaia import Gaia
 from service.planets import searchPlanet
 
-def startsData(planetN, view_range_x=100, view_range_y=100, dist_range=100):
+def starsData(planetN, view_range_x=80, view_range_y=90, dist_range=50):
   planet = searchPlanet(planetN)
   coord = SkyCoord(ra=planet.get("ra"), dec=planet.get("dec"), unit=(u.degree, u.degree), frame='icrs')
   width = u.Quantity(view_range_x, u.deg)
@@ -26,9 +26,9 @@ def startsData(planetN, view_range_x=100, view_range_y=100, dist_range=100):
   stars = []
 
   for row in results:
-    ra = row["ra"]
-    dec = row["dec"]
-    distance = row["distance_gspphot"]
+    ra = float(row["ra"])
+    dec = float(row["dec"])
+    distance = float(row["distance_gspphot"])
     stars.append({'ra': ra, 'dec': dec, 'sy_dist': distance})
 
   return stars
