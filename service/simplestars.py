@@ -3,7 +3,7 @@ from astropy.coordinates import SkyCoord
 from astroquery.gaia import Gaia
 from service.planets import searchPlanet
 
-def startsData(planetN, view_range_x, view_range_y, dist_range):
+def startsData(planetN, view_range_x=100, view_range_y=100, dist_range=100):
   planet = searchPlanet(planetN)
   coord = SkyCoord(ra=planet.get("ra"), dec=planet.get("dec"), unit=(u.degree, u.degree), frame='icrs')
   width = u.Quantity(view_range_x, u.deg)
