@@ -4,41 +4,22 @@ from astroquery.gaia import Gaia
 from service.planets import searchPlanet
 import numpy as np
 
-def cartesian(ra, dec, dist):
-  ra_rad = np.radians(ra)
-  dec_rad = np.radians(dec)
-
-  x = dist * np.cos(dec_rad) * np.cos(ra_rad)
-  y = dist * np.cos(dec_rad) * np.sin(ra_rad)
-  z = dist * np.sin(dec_rad)
-
-  return x, y, z
-
-
-def trasladar_coordenadas(star, punto_inicial):
-  x_inicial, y_inicial, z_inicial = punto_inicial
-  x0, y0, z0 = star
-
-  x = x0 - x_inicial
-  y = y0 - y_inicial
-  z = z0 - z_inicial
-
-  return x, y, z
-
-
-def central_reference(planet, view_range_x=100, view_range_y=100, dist_range=100):
-  planet = searchPlanet(planet)
-  x1, y2, z3 = cartesian(planet.get("ra"), planet.get("dec"), planet.get("sy_dist"))
-
-  print(x1,y2,z3)
-
+def central_reference(planetN, view_range_x=15, view_range_y=15, dist_range=20):
+  planet = searchPlanet(planetN)
   coord = SkyCoord(ra=planet.get("ra"), dec=planet.get("dec"), unit=(u.degree, u.degree), frame='icrs')
   width = u.Quantity(view_range_x, u.deg)
   height = u.Quantity(view_range_y, u.deg)
+  print("Coords: ",coord.ra.deg, coord.dec.deg, width.value, height.value)
   min_dist = 0 if (planet["sy_dist"] - dist_range) < 0 else planet["sy_dist"] - dist_range
   max_dist = planet["sy_dist"] + dist_range
+  print("Distancia mínima", min_dist)
+  print("Distancia máxima", max_dist)
   query = f"""
-  SELECT ra, dec, distance_gspphot
+  SELECT ra, dec, 
+    distance_gspphot,
+    phot_g_mean_mag, 
+    phot_bp_mean_mag, 
+    phot_rp_mean_mag
   FROM gaiadr3.gaia_source
   WHERE 1 = CONTAINS(
     POINT('ICRS', ra, dec),
@@ -49,21 +30,23 @@ def central_reference(planet, view_range_x=100, view_range_y=100, dist_range=100
   r = Gaia.launch_job_async(query)
   results = r.get_results()
 
-  coords = []
-
-  coords.append({'ra': x1, 'dec': y2, 'dist': z3})
+  stars = []
 
   for row in results:
-    ra = row["ra"]
-    dec = row["dec"]
-    distance = row["distance_gspphot"]
-    cartesian_star_points = cartesian(ra , dec, distance)
-    x, y, z = trasladar_coordenadas(cartesian_star_points,[x1,y2,z3])
+    ra = float(row["ra"])
+    dec = float(row["dec"])
+    distance = float(row["distance_gspphot"])
+    phot_g_mean_mag = float(row["phot_g_mean_mag"])
+    phot_bp_mean_mag = float(row["phot_bp_mean_mag"])
+    phot_rp_mean_mag = float(row["phot_rp_mean_mag"])
+    stars.append({'ra': ra, 
+                  'dec': dec, 
+                  'distance': distance,
+                  'phot_g': phot_g_mean_mag,
+                  'phot_bp': phot_bp_mean_mag,
+                  'phot_rp': phot_rp_mean_mag})
+    
+  print(len(stars))
 
-
-    coords.append({'ra': x, 'dec': y, 'dist': z})
-
-  
-
-  return coords
+  return stars
 
